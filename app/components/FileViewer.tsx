@@ -52,7 +52,8 @@ interface FileViewerProps {
 export function FileViewer({ file, className, chatPanel }: FileViewerProps) {
   const viewerRef = useRef<HTMLDivElement>(null)
   const [isCapturing, setIsCapturing] = useState(false)
-
+  const [isMeasuring, setIsMeasuring] = useState(false)
+  
   const handleCaptureView = async () => {
     if (!viewerRef.current || !chatPanel) return
 
@@ -80,6 +81,28 @@ export function FileViewer({ file, className, chatPanel }: FileViewerProps) {
     }
   }
 
+  // Toggle measuring mode
+  const toggleMeasuring = () => {
+    console.log("FileViewer: Toggling measuring mode, current:", isMeasuring)
+    setIsMeasuring(!isMeasuring)
+  }
+
+  // Handlers for measure events from child components
+  const handleMeasureStart = () => {
+    console.log("FileViewer: Measure start received from child")
+    setIsMeasuring(true)
+  }
+
+  const handleMeasureEnd = () => {
+    console.log("FileViewer: Measure end received from child")
+    setIsMeasuring(false)
+  }
+  
+  // Handler for measurement data updates from child components
+  const handleMeasurementUpdate = (data: { length?: number; angle?: number; message?: string }) => {
+    console.log("FileViewer: Measurement update received", data)
+  }
+
   if (!file) {
     return (
       <div className={cn("flex items-center justify-center h-full", className)}>
@@ -89,7 +112,10 @@ export function FileViewer({ file, className, chatPanel }: FileViewerProps) {
   }
 
   return (
-    <div className="relative h-full" ref={viewerRef}>
+    <div 
+      className="relative h-full" 
+      ref={viewerRef}
+    >
       {/* AI Capture button */}
       <Button
         variant="outline"
@@ -101,22 +127,42 @@ export function FileViewer({ file, className, chatPanel }: FileViewerProps) {
         AI
       </Button>
 
+      {/* Measure button */}
+      <Button
+        variant="outline"
+        className={cn(
+          "absolute bottom-4 right-24 z-10 shadow-lg hover:shadow-xl transition-all duration-200",
+          isMeasuring ? "bg-blue-500 text-white" : "bg-white text-black"
+        )}
+        onClick={toggleMeasuring}
+      >
+        Measure {isMeasuring ? "On" : "Off"}
+      </Button>
+
       {/* Viewer content */}
       <div className="viewer-container h-full">
         {(() => {
+          console.log("FileViewer: Rendering with isMeasuring =", isMeasuring)
+          const commonProps = {
+            onMeasureStart: handleMeasureStart,
+            onMeasureEnd: handleMeasureEnd,
+            onMeasurementUpdate: handleMeasurementUpdate,
+            isMeasuring: isMeasuring,
+          }
+          
           switch (file.type) {
             case "image":
-              return <ImageViewer file={file} className={className} />
+              return <ImageViewer file={file} className={className} {...commonProps} />
             case "pdf":
-              return <PdfViewer file={file} className={className} />
+              return <PdfViewer file={file} className={className} {...commonProps} />
             case "step":
-              return <StepViewer fileUrl={file.preview} fileName={file.name} className={className} />
+              return <StepViewer fileUrl={file.preview} fileName={file.name} className={className} {...commonProps} />
             case "stl":
-              return <StlViewer file={file} className={className} />
+              return <StlViewer file={file} className={className} {...commonProps} />
             case "3mf":
-              return <ThreeMfViewer file={file} className={className} />
+              return <ThreeMfViewer file={file} className={className} {...commonProps} />
             case "dxf":
-              return <DxfViewer file={file} className={className} />
+              return <DxfViewer file={file} className={className} {...commonProps} />
             default:
               return (
                 <div className={cn("flex items-center justify-center h-full", className)}>

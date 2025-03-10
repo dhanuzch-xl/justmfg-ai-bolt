@@ -38,6 +38,7 @@
     "lucide-react": "^0.446.0",
     "next": "13.5.1",
     "occt-import-js": "^0.0.23",
+    "online-3d-viewer": "^0.15.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-resizable-panels": "^2.1.3",
